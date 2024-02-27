@@ -119,3 +119,51 @@ def find_min_hdpi_prob_bin(x, samples, log_weights):
     final_hdpi = compute_hdpi(samples, log_weights, hdpi_prob=high)
     return high, final_hdpi[0], final_hdpi[1]
 
+def ess(inference_result):
+    """
+    Calculate the Effective Sample Size (ESS) of the inference result.
+
+    NOTE: This function works only on samples that are either Real 
+    (single floating-point numbers) or Real[] (arrays of floating-point numbers)
+    due to a limitation in `compress_weights`, see below.
+    
+    It first compresses the samples by combining those that are identical,
+    summing their weights, then calculates the ESS based on these compressed weights.
+
+    Returns:
+        The effective sample size as float.
+    """
+    
+    def compress_weights(samples, nweights):
+        unique_weights = {}
+
+        # Check if the samples are a list of lists or a simple list
+        if samples and isinstance(samples[0], float):
+            # Convert each sample to a tuple with a single element
+            samples = [(sample,) for sample in samples]
+
+        for sample, weight in zip(samples, nweights):
+            sample_tuple = tuple(sample)
+
+            if sample_tuple in unique_weights:
+                unique_weights[sample_tuple] += weight
+            else:
+                unique_weights[sample_tuple] = weight
+
+        # Not needed for now:
+        # compressed_samples = [list(sample) for sample in unique_samples.keys()]
+        compressed_nweights = np.array(list(unique_weights.values()))
+
+        return compressed_nweights
+
+    def calculate_ess(nweights):
+        if nweights is None or len(nweights) == 0:
+            return 0
+
+        normalized_weights = nweights / np.sum(nweights)
+        sum_of_squares = np.sum(normalized_weights**2)
+        return 1 / sum_of_squares
+
+    compressed_nweights = compress_weights(inference_result.samples, inference_result.nweights)
+    ess = calculate_ess(compressed_nweights)
+    return ess

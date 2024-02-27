@@ -11,9 +11,7 @@ setup(
     author_email="vsenderov@example.com",
     url="https://github.com/treeppl/treeppl-python-utils",
     license="LICENSE",
-    install_requires=[
-        "treeppl >= 0.2"
-    ],
+    install_requires="treeppl",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
